@@ -1,0 +1,100 @@
+name: Yak Release
+
+# Tag vX.Y.Z (stable) or vX.Y.Z-beta.N (pre-release) -> test, build the .gha, `yak build`,
+# `yak push` to yak.rhino3d.com, then attach the .yak to a GitHub release.
+# A pull request touching grasshopper/ runs the same pipeline as a dry run (no push, no secrets).
+# Needs the repository secret YAK_TOKEN (Yak token from your Rhino Account).
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+", "v[0-9]+.[0-9]+.[0-9]+-*"]
+  pull_request:
+    paths: ["grasshopper/**", ".github/workflows/yak-release.yml"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build, e.g. 0.1.1 or 0.2.0-beta.1 (dry run unless 'publish' is ticked)"
+        required: true
+      publish:
+        description: "Push to Yak"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    # Billed 2x on Windows; yak.exe is the only CLI McNeel ships for CI.
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      YAK_URL: https://files.mcneel.com/yak/tools/0.13.0/yak.exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve version
+        id: v
+        shell: pwsh
+        run: |
+          $raw = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') }
+                 elseif ('${{ inputs.version }}') { '${{ inputs.version }}' }
+                 else { (Select-String -Path grasshopper/manifest.yml -Pattern '^version:\s*(.+)$').Matches[0].Groups[1].Value.Trim() }
+          if ($raw -notmatch '^(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$') { throw "Bad version '$raw'" }
+          $publish = ($env:GITHUB_REF_TYPE -eq 'tag') -or ('${{ inputs.publish }}' -eq 'true')
+          "version=$raw" | Out-File $env:GITHUB_OUTPUT -Append
+          "asm=$($Matches[1]).$($Matches[2]).$($Matches[3]).0" | Out-File $env:GITHUB_OUTPUT -Append
+          "publish=$($publish.ToString().ToLower())" | Out-File $env:GITHUB_OUTPUT -Append
+          "prerelease=$([bool]$Matches[4])".ToLower() | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Test
+        run: dotnet test grasshopper/OpenPyStruct.Core.Tests -c Release
+
+      - name: Build plugin
+        run: >
+          dotnet build grasshopper/OpenPyStruct.GH/OpenPyStruct.GH.csproj -c Release -o stage
+          -p:Version=${{ steps.v.outputs.version }} -p:InformationalVersion=${{ steps.v.outputs.version }}
+          -p:AssemblyVersion=${{ steps.v.outputs.asm }} -p:FileVersion=${{ steps.v.outputs.asm }}
+
+      - name: Stage and yak build
+        shell: pwsh
+        run: |
+          Remove-Item stage/*.pdb
+          Copy-Item grasshopper/manifest.yml, grasshopper/LICENSE stage/
+          Invoke-WebRequest $env:YAK_URL -OutFile yak.exe
+          Push-Location stage
+          & ..\yak.exe build --platform any --version '${{ steps.v.outputs.version }}'
+          if ($LASTEXITCODE -ne 0) { throw 'yak build failed' }
+          Pop-Location
+          $pkg = (Get-ChildItem stage/*.yak).FullName
+          if (@($pkg).Count -ne 1) { throw "Expected one .yak, found: $pkg" }
+          "PKG=$pkg" | Out-File $env:GITHUB_ENV -Append
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yak-package
+          path: stage/*.yak
+
+      - name: Push to Yak
+        if: steps.v.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          YAK_TOKEN: ${{ secrets.YAK_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:YAK_TOKEN)) { throw 'Repository secret YAK_TOKEN is empty.' }
+          & .\yak.exe push $env:PKG
+          if ($LASTEXITCODE -ne 0) { throw 'yak push failed' }
+          & .\yak.exe search OpenPyStruct --prerelease
+
+      - name: GitHub release
+        if: steps.v.outputs.publish == 'true' && github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $pre = if ('${{ steps.v.outputs.prerelease }}' -eq 'true') { '--prerelease' } else { '' }
+          gh release create $env:GITHUB_REF_NAME $env:PKG --generate-notes --title $env:GITHUB_REF_NAME $pre
