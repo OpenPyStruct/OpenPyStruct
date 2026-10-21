@@ -13,6 +13,7 @@
  *     ../manifest.csv                     name, ribbon tab, family, accent
  *     ../package/OpenPyStruct_Logo.svg    the logo (logo.js), plus OpenPyStruct.png (128px, the Yak icon)
  *                                         and OpenPyStruct_Avatar.png (512px, GitHub org); full run or --package
+ *     ../package/OpenPyStruct_Logo_Light.svg, OpenPyStruct_Avatar_Light.png   the light-theme variant
  *
  * Adding a glyph is: write the def() in ops-vec-set.js, then
  *
@@ -90,27 +91,34 @@ function packageLogo() {
     process.exit(1);
   }
   fs.mkdirSync(PKG_DIR, { recursive: true });
-  const logo = require('./logo.js').svg();
-  fs.writeFileSync(path.join(PKG_DIR, 'OpenPyStruct_Logo.svg'), logo);
+  const L = require('./logo.js');
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ops-pkg-'));
-  for (const [file, px] of [['OpenPyStruct.png', 128], ['OpenPyStruct_Avatar.png', 512]]) {
-    const big = px * 4;
-    const html = '<!doctype html><html><head><style>*{margin:0;padding:0}svg{width:' + big + 'px;height:' + big +
-      'px;display:block}</style></head><body>' + logo + '</body></html>';
-    fs.writeFileSync(path.join(tmpDir, 'p.html'), html);
-    const shot = path.join(tmpDir, 'p.png');
-    execFileSync(chromeBin, ['--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
-      '--default-background-color=00000000', '--screenshot=' + shot,
-      '--window-size=' + (big + 40) + ',' + (big + 200), 'file://' + path.join(tmpDir, 'p.html')], { stdio: 'ignore' });
-    execFileSync(py, ['-c', [
-      'import sys', 'from PIL import Image',
-      'src, dst, big, px = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])',
-      'im = Image.open(src).convert("RGBA").crop((0, 0, big, big))',
-      'if max(im.getpixel((x, y))[3] for x in range(big) for y in range(0, big, 7)) < 40:',
-      '    raise SystemExit("rendered blank: " + src)',
-      'im.resize((px, px), Image.LANCZOS).save(dst)',
-    ].join('\n'), shot, path.join(PKG_DIR, file), String(big), String(px)], { stdio: 'inherit' });
-    console.log('emit: wrote package/' + file + ' (' + px + 'x' + px + ')');
+  /* theme, svg name, [png name, px]...: dark is the default and the Yak icon; light is for light pages. */
+  const OUT = [['dark', 'OpenPyStruct_Logo.svg', [['OpenPyStruct.png', 128], ['OpenPyStruct_Avatar.png', 512]]],
+               ['light', 'OpenPyStruct_Logo_Light.svg', [['OpenPyStruct_Avatar_Light.png', 512]]]];
+  for (const [theme, svgName, pngs] of OUT) {
+    const logo = L.svg(theme);
+    fs.writeFileSync(path.join(PKG_DIR, svgName), logo);
+    console.log('emit: wrote package/' + svgName);
+    for (const [file, px] of pngs) {
+      const big = px * 4;
+      const html = '<!doctype html><html><head><style>*{margin:0;padding:0}svg{width:' + big + 'px;height:' + big +
+        'px;display:block}</style></head><body>' + logo + '</body></html>';
+      fs.writeFileSync(path.join(tmpDir, 'p.html'), html);
+      const shot = path.join(tmpDir, 'p.png');
+      execFileSync(chromeBin, ['--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
+        '--default-background-color=00000000', '--screenshot=' + shot,
+        '--window-size=' + (big + 40) + ',' + (big + 200), 'file://' + path.join(tmpDir, 'p.html')], { stdio: 'ignore' });
+      execFileSync(py, ['-c', [
+        'import sys', 'from PIL import Image',
+        'src, dst, big, px = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])',
+        'im = Image.open(src).convert("RGBA").crop((0, 0, big, big))',
+        'if max(im.getpixel((x, y))[3] for x in range(big) for y in range(0, big, 7)) < 40:',
+        '    raise SystemExit("rendered blank: " + src)',
+        'im.resize((px, px), Image.LANCZOS).save(dst)',
+      ].join('\n'), shot, path.join(PKG_DIR, file), String(big), String(px)], { stdio: 'inherit' });
+      console.log('emit: wrote package/' + file + ' (' + px + 'x' + px + ')');
+    }
   }
   fs.rmSync(tmpDir, { recursive: true, force: true });
 }

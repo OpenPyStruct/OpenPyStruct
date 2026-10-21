@@ -81,6 +81,8 @@ load on a pin and a roller, on a dark tile. It is brand art in a 128-unit box, s
 24-unit component glyphs. `node emit.js --package` (a full run does it too) writes, 4x supersampled and
 box-filtered, `package/OpenPyStruct_Logo.svg`, `package/OpenPyStruct.png` (128px, the Yak icon) and
 `package/OpenPyStruct_Avatar.png` (512px, for the GitHub org avatar, uploaded by hand in the org settings).
+A light-theme variant (`THEMES.light` in `logo.js`) is written as `OpenPyStruct_Logo_Light.svg` and
+`OpenPyStruct_Avatar_Light.png`; the README header switches between the two with `prefers-color-scheme`.
 `manifest.yml` names the Yak icon (`icon: OpenPyStruct.png`) and `yak-release.yml` copies it into the package.
 
 ## Licensing

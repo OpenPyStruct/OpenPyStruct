@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="grasshopper/icons/package/OpenPyStruct_Logo.svg">
+    <img src="grasshopper/icons/package/OpenPyStruct_Logo_Light.svg" alt="OpenPyStruct logo" width="160">
+  </picture>
+</p>
+
 # OpenPyStruct
 
 [![CI](https://github.com/OpenPyStruct/OpenPyStruct/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/OpenPyStruct/OpenPyStruct/actions/workflows/ci.yml)

@@ -15,7 +15,8 @@ The icon set under `grasshopper/icons/` is generated. **Edit the `def()` in `ico
   `OpenPyStruct.GH/Icons.cs`. A miss is silent (Grasshopper draws its default box).
 - The logo is code too: `icons/src/logo.js` draws it (a meshed fish-belly girder under load, 128 units),
   and `node emit.js --package` (or a full run) writes `icons/package/OpenPyStruct_Logo.svg`, the 128px Yak
-  icon `OpenPyStruct.png` and the 512px org avatar `OpenPyStruct_Avatar.png`. Edit `logo.js`, never the
+  icon `OpenPyStruct.png` and the 512px org avatar `OpenPyStruct_Avatar.png`, plus `_Light` variants of the
+  SVG and avatar (the Yak icon stays dark). Edit `logo.js`, never the
   outputs, and never resize a `png24/` glyph to make a bigger icon.
 - The engine and exporter are Eddy3D's (GPL-3.0-or-later). Keep the provenance headers.
 
