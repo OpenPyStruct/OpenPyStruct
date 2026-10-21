@@ -4,7 +4,7 @@
 
 The icon set under `grasshopper/icons/` is generated. **Edit the `def()` in `icons/src/ops-vec-set.js`
 (or a motif in `ops-vec.js`), then run `node emit.js`.** It writes, in one pass, `svg/`, `png24/`,
-`OpenPyStruct_Icons_Vector.svg`, `manifest.csv` and `package/OpenPyStruct.png`, so they cannot drift.
+`OpenPyStruct_Icons_Vector.svg`, `manifest.csv` and the logo files in `package/`, so they cannot drift.
 
 - Never hand-draw an SVG, hand-place a PNG, or resize one with ImageMagick, System.Drawing or an online
   tool. If Chromium or Pillow is missing, fix the environment (`OPENPYSTRUCT_CHROME`,
@@ -13,8 +13,10 @@ The icon set under `grasshopper/icons/` is generated. **Edit the `def()` in `ico
   The engine's safe-area guard fails the run instead of cropping; shrink the motif, do not bypass it.
 - A glyph's file name is its wiring: it must equal the component's display Name after the transform in
   `OpenPyStruct.GH/Icons.cs`. A miss is silent (Grasshopper draws its default box).
-- The Yak package icon (`icons/package/OpenPyStruct.png`) is the plugin glyph at 128x128 RGBA, made by
-  `node emit.js --package`. Never resize `png24/OpenPyStruct.png` to get it.
+- The logo is code too: `icons/src/logo.js` draws it (a meshed fish-belly girder under load, 128 units),
+  and `node emit.js --package` (or a full run) writes `icons/package/OpenPyStruct_Logo.svg`, the 128px Yak
+  icon `OpenPyStruct.png` and the 512px org avatar `OpenPyStruct_Avatar.png`. Edit `logo.js`, never the
+  outputs, and never resize a `png24/` glyph to make a bigger icon.
 - The engine and exporter are Eddy3D's (GPL-3.0-or-later). Keep the provenance headers.
 
 `dotnet test grasshopper/OpenPyStruct.Core.Tests` guards this (`TestIconCoverage`, `TestIconPolicy`):

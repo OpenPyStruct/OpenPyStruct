@@ -45,6 +45,9 @@ public class TestIconPolicy
         int H() => (b[20] << 24) | (b[21] << 16) | (b[22] << 8) | b[23];
         Assert.That((W(), H(), b[25]), Is.EqualTo((128, 128, (byte)6)));
 
+        foreach (var f in new[] { "OpenPyStruct_Logo.svg", "OpenPyStruct_Avatar.png" })
+            Assert.That(File.Exists(Path.Combine(Icons(), "package", f)), f + " missing; run `node emit.js --package`");
+
         var manifest = File.ReadAllText(Path.Combine(Root(), "grasshopper", "manifest.yml"));
         Assert.That(manifest, Does.Contain("icon: OpenPyStruct.png"));
         var workflow = File.ReadAllText(Path.Combine(Root(), ".github", "workflows", "yak-release.yml"));

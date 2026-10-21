@@ -11,14 +11,15 @@
  *     ../png24/<Name>.png                 the same rasterised at 24x24, transparent
  *     ../OpenPyStruct_Icons_Vector.svg    sprite sheet (one <symbol id="ops-Name">)
  *     ../manifest.csv                     name, ribbon tab, family, accent
- *     ../package/OpenPyStruct.png         the Yak package icon: the plugin glyph at 128x128 (full run or --package)
+ *     ../package/OpenPyStruct_Logo.svg    the logo (logo.js), plus OpenPyStruct.png (128px, the Yak icon)
+ *                                         and OpenPyStruct_Avatar.png (512px, GitHub org); full run or --package
  *
  * Adding a glyph is: write the def() in ops-vec-set.js, then
  *
  *     node emit.js Beam_Model         # one or more names
  *     node emit.js                    # the whole set
  *     node emit.js --svg-only Foo     # skip rasterisation
- *     node emit.js --package          # only the 128px Yak package icon
+ *     node emit.js --package          # only the logo SVG and its PNGs
  *     node emit.js --prune            # also drop artefacts with no def()
  *     node emit.js --no-prune         # never drop anything
  *
@@ -80,37 +81,38 @@ if (!V || !SET) {
   process.exit(1);
 }
 
-/* The Yak package icon is the plugin glyph, drawn through the same engine and safe-area guard and
-   rasterised 4x supersampled then box-filtered to 128px. Never resize png24/OpenPyStruct.png. */
-function packageIcon() {
-  const body = V.glyph(SET.ICONS.OpenPyStruct);
-  const over = V.overflow(body);
-  if (over) { console.error('emit: package glyph exceeds the safe area ' + JSON.stringify(over)); process.exit(1); }
+/* The logo is brand art (logo.js, a 128-unit drawing), not a component glyph: its SVG is written as
+   is and rasterised 4x supersampled then box-filtered to each size. Never resize png24/ glyphs. */
+function packageLogo() {
   const chromeBin = findChrome(), py = findPython();
   if (!chromeBin || !py) {
-    console.error('emit: the package icon needs Chromium (OPENPYSTRUCT_CHROME) and python3 + Pillow (OPENPYSTRUCT_PYTHON).');
+    console.error('emit: the logo PNGs need Chromium (OPENPYSTRUCT_CHROME) and python3 + Pillow (OPENPYSTRUCT_PYTHON).');
     process.exit(1);
   }
-  const big = PKG_PX * 4;
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ops-pkg-'));
-  const html = '<!doctype html><html><head><style>*{margin:0;padding:0}svg{width:' + big + 'px;height:' + big +
-    'px;display:block}</style></head><body>' + V.wrap(body, 24, true) + '</body></html>';
-  fs.writeFileSync(path.join(tmpDir, 'p.html'), html);
-  const shot = path.join(tmpDir, 'p.png');
-  execFileSync(chromeBin, ['--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
-    '--default-background-color=00000000', '--screenshot=' + shot,
-    '--window-size=' + (big + 40) + ',' + (big + 200), 'file://' + path.join(tmpDir, 'p.html')], { stdio: 'ignore' });
   fs.mkdirSync(PKG_DIR, { recursive: true });
-  execFileSync(py, ['-c', [
-    'import sys', 'from PIL import Image',
-    'src, dst, big, px = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])',
-    'im = Image.open(src).convert("RGBA").crop((0, 0, big, big))',
-    'if max(im.getpixel((x, y))[3] for x in range(big) for y in range(0, big, 7)) < 40:',
-    '    raise SystemExit("rendered blank: " + src)',
-    'im.resize((px, px), Image.LANCZOS).save(dst)',
-  ].join('\n'), shot, path.join(PKG_DIR, 'OpenPyStruct.png'), String(big), String(PKG_PX)], { stdio: 'inherit' });
+  const logo = require('./logo.js').svg();
+  fs.writeFileSync(path.join(PKG_DIR, 'OpenPyStruct_Logo.svg'), logo);
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ops-pkg-'));
+  for (const [file, px] of [['OpenPyStruct.png', 128], ['OpenPyStruct_Avatar.png', 512]]) {
+    const big = px * 4;
+    const html = '<!doctype html><html><head><style>*{margin:0;padding:0}svg{width:' + big + 'px;height:' + big +
+      'px;display:block}</style></head><body>' + logo + '</body></html>';
+    fs.writeFileSync(path.join(tmpDir, 'p.html'), html);
+    const shot = path.join(tmpDir, 'p.png');
+    execFileSync(chromeBin, ['--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
+      '--default-background-color=00000000', '--screenshot=' + shot,
+      '--window-size=' + (big + 40) + ',' + (big + 200), 'file://' + path.join(tmpDir, 'p.html')], { stdio: 'ignore' });
+    execFileSync(py, ['-c', [
+      'import sys', 'from PIL import Image',
+      'src, dst, big, px = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])',
+      'im = Image.open(src).convert("RGBA").crop((0, 0, big, big))',
+      'if max(im.getpixel((x, y))[3] for x in range(big) for y in range(0, big, 7)) < 40:',
+      '    raise SystemExit("rendered blank: " + src)',
+      'im.resize((px, px), Image.LANCZOS).save(dst)',
+    ].join('\n'), shot, path.join(PKG_DIR, file), String(big), String(px)], { stdio: 'inherit' });
+    console.log('emit: wrote package/' + file + ' (' + px + 'x' + px + ')');
+  }
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  console.log('emit: wrote package/OpenPyStruct.png (' + PKG_PX + 'x' + PKG_PX + ')');
 }
 
 const targets = names.length ? names : SET.ORDER.slice();
@@ -121,7 +123,7 @@ if (unknown.length) {
   process.exit(1);
 }
 
-if (packageOnly) { packageIcon(); process.exit(0); }
+if (packageOnly) { packageLogo(); process.exit(0); }
 
 fs.mkdirSync(SVG_DIR, { recursive: true });
 fs.mkdirSync(PNG_DIR, { recursive: true });
@@ -430,6 +432,6 @@ for (const name of targets) {
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });
-if (names.length === 0 && python) packageIcon();
+if (names.length === 0 && python) packageLogo();
 console.log('emit: rasterised ' + targets.length + ' PNG' + (targets.length === 1 ? '' : 's') +
   (python ? '' : ' (Chromium canvas — python3 + Pillow not available)'));
