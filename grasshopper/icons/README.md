@@ -67,6 +67,18 @@ what `TestIconCoverage` in `OpenPyStruct.Core.Tests` exists to catch.
 `OpenPyStruct.png` is the exception with no component behind it: it is the ribbon tab's icon and
 the assembly's.
 
+## Policy
+
+Icons are code (full rule in the repo-root `CLAUDE.md`): change a `def()`, run `node emit.js`, commit the
+outputs with it. No hand-drawn or externally resized artefacts. `TestIconPolicy` fails CI when `svg/`,
+`png24/` and `manifest.csv` disagree or the package icon is not 128x128 RGBA.
+
+## Yak package icon
+
+`package/OpenPyStruct.png` is the plugin glyph at 128x128, rendered 4x supersampled and box-filtered by
+`node emit.js --package` (a full run does it too). `manifest.yml` names it (`icon: OpenPyStruct.png`) and
+`yak-release.yml` copies it into the package.
+
 ## Licensing
 
 The engine and exporter are Eddy3D's code under GPL-3.0-or-later, as is the plugin that embeds the
