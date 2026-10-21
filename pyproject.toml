@@ -5,6 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openpystruct"
 version = "0.1.0"
+authors = [
+    { name = "Patrick Kastner" },
+    { name = "Danny Smyl" },
+]
 description = "OpenSees + PyTorch structural optimization with ML surrogates, driven by a JSON case file"
 readme = "README.md"
 requires-python = ">=3.9"

@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: If you use OpenPyStruct in your research, please cite the paper below.
+title: OpenPyStruct
+type: software
+license: GPL-3.0-or-later
+repository-code: https://github.com/OpenPyStruct/OpenPyStruct
+authors:
+  - family-names: Kastner
+    given-names: Patrick
+    affiliation: Georgia Institute of Technology
+  - family-names: Smyl
+    given-names: Danny
+    affiliation: Georgia Institute of Technology
+preferred-citation:
+  type: article
+  title: "OpenPyStruct: Open-Source Toolkit for Machine Learning-Driven Structural Optimization"
+  journal: Engineering Structures
+  year: 2025
+  doi: 10.1016/j.engstruct.2025.120869
+  authors:
+    - { family-names: Smyl, given-names: Danny, affiliation: "Georgia Institute of Technology" }
+    - { family-names: Zhuang, given-names: Bozhou, affiliation: "Georgia Institute of Technology" }
+    - { family-names: Rigby, given-names: Sam, affiliation: "University of Sheffield" }
+    - { family-names: Bruun, given-names: Edvard, affiliation: "Georgia Institute of Technology" }
+    - { family-names: Jones, given-names: Brandon, affiliation: "Georgia Institute of Technology" }
+    - { family-names: Kastner, given-names: Patrick, affiliation: "Georgia Institute of Technology" }
+    - { family-names: Tien, given-names: Iris, affiliation: "Georgia Institute of Technology" }
+    - { family-names: Gallet, given-names: Adrien, affiliation: "Unipart Construction Technologies" }

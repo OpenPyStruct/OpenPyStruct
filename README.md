@@ -55,6 +55,22 @@ tests/               Python tests
 - **PINN and FNN surrogates** for fast prediction of optimized sections
 - **User-defined constraints, objectives and loss weights**
 
+## Citing
+
+If you use OpenPyStruct in research, please cite the paper (GitHub shows a "Cite this repository" button from [CITATION.cff](CITATION.cff)):
+
+> Smyl, D., Zhuang, B., Rigby, S., Bruun, E., Jones, B., Kastner, P., Tien, I., Gallet, A.
+> *OpenPyStruct: Open-Source Toolkit for Machine Learning-Driven Structural Optimization.*
+> Engineering Structures, 2025. [doi:10.1016/j.engstruct.2025.120869](https://doi.org/10.1016/j.engstruct.2025.120869)
+
+## Authors and acknowledgements
+
+The Grasshopper plugin and Yak packaging are by Patrick Kastner and Danny Smyl. The optimizers,
+surrogates and research scripts are the work of the paper's authors; per the paper's CRediT
+statement, software contributions come from Danny Smyl, Bozhou Zhuang, Adrien Gallet and Edvard Bruun
+(GitHub implementation), with validation and review by Sam Rigby, Brandon Jones, Patrick Kastner and
+Iris Tien.
+
 ## Releasing
 
 Push a tag `vX.Y.Z` (or `vX.Y.Z-beta.N`). [`yak-release.yml`](.github/workflows/yak-release.yml)
