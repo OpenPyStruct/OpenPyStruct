@@ -96,5 +96,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $pre = if ('${{ steps.v.outputs.prerelease }}' -eq 'true') { '--prerelease' } else { '' }
-          gh release create $env:GITHUB_REF_NAME $env:PKG --generate-notes --title $env:GITHUB_REF_NAME $pre
+          $extra = @()
+          if ('${{ steps.v.outputs.prerelease }}' -eq 'true') { $extra += '--prerelease' }
+          gh release create $env:GITHUB_REF_NAME $env:PKG --generate-notes --title $env:GITHUB_REF_NAME @extra
