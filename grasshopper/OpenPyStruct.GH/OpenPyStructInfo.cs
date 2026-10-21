@@ -13,7 +13,7 @@ public class OpenPyStructInfo : GH_AssemblyInfo
         "Structural optimization with OpenSees + PyTorch: gradient-based moment-of-inertia design "
         + "for beams and frames, training data generation, and FNN/PINN surrogates.";
     public override Guid Id => new("BC2E34BE-C120-4088-8CF5-FA28A41F1444");
-    public override string AuthorName => "OpenPyStruct Authors";
+    public override string AuthorName => "Patrick Kastner, Danny Smyl";
     public override string AuthorContact => Docs.Repo;
     public override string AssemblyVersion => GetType().Assembly.GetName().Version.ToString();
 }
