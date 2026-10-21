@@ -214,6 +214,7 @@ grasshopper/
   OpenPyStruct.Core.Tests/
   OpenPyStruct.GH/       the .gha: CMP/ components, Types/ wire objects, GUI/ (banner UI copied from Eddy3D)
   manifest.yml           YAK package manifest
+scripts/research/        original research scripts (Beta/ = experimental); superseded by openpystruct/
 ```
 
 `GUI/` is copied from Eddy3D so the components get its inline toggles, dropdowns, progress banner
@@ -221,6 +222,6 @@ and background-run pattern without an assembly dependency; see `GUI/README.md` f
 
 ## License
 
-The Grasshopper plugin (`OpenPyStruct.GH`, the `.gha`) is **GPL-3.0-or-later** because it links
-Eddy3D's GPL component chrome (`OpenPyStruct.GH/GUI/`) — see `LICENSE` in this folder. The Python
-engine, the Docker files and `OpenPyStruct.Core` are MIT like the rest of the repository.
+**GPL-3.0-or-later** for the whole repository (see `LICENSE` at the root). The plugin links
+Eddy3D's GPL component chrome (`OpenPyStruct.GH/GUI/`), so the `.gha` must be GPL, and the Python
+engine, Docker files and `OpenPyStruct.Core` share that license.

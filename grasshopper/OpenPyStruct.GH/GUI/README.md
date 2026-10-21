@@ -15,7 +15,7 @@ scan ("Component ID conflict").
 ## Licensing
 
 Eddy3D is GPL-3.0-or-later and these files stay **GPL-3.0-or-later** (decision 2026-09-15). Because
-the plugin assembly links them, `OpenPyStruct.gha` as a whole is distributed under GPL-3.0-or-later;
-see `grasshopper/LICENSE`. The Python package, the Rhino-free `OpenPyStruct.Core` library and the
-rest of the repository remain MIT. Nothing else depends on this folder: replace
-`GH_BeautifulComponent` with a plain `GH_Component` base to build an MIT-only plugin.
+the plugin assembly links them, `OpenPyStruct.gha` is distributed under GPL-3.0-or-later; the
+repository as a whole is GPL-3.0-or-later too (see `LICENSE` at the root). Nothing else depends on
+this folder: replace `GH_BeautifulComponent` with a plain `GH_Component` base to build a plugin
+without Eddy3D's chrome.
