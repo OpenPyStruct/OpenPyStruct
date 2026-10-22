@@ -67,6 +67,24 @@ what `TestIconCoverage` in `OpenPyStruct.Core.Tests` exists to catch.
 `OpenPyStruct.png` is the exception with no component behind it: it is the ribbon tab's icon and
 the assembly's.
 
+## Policy
+
+Icons are code (full rule in the repo-root `CLAUDE.md`): change a `def()`, run `node emit.js`, commit the
+outputs with it. No hand-drawn or externally resized artefacts. `TestIconPolicy` fails CI when `svg/`,
+`png24/` and `manifest.csv` disagree or the package icon is not 128x128 RGBA.
+
+## Logo and Yak package icon
+
+`src/logo.js` draws the logo: a fish-belly girder, deep at midspan and shallow at the supports (the
+shape an optimizer converges to under a central load), meshed into finite elements, under a uniform
+load on a pin and a roller, on a dark tile. It is brand art in a 128-unit box, separate from the
+24-unit component glyphs. `node emit.js --package` (a full run does it too) writes, 4x supersampled and
+box-filtered, `package/OpenPyStruct_Logo.svg`, `package/OpenPyStruct.png` (128px, the Yak icon) and
+`package/OpenPyStruct_Avatar.png` (512px, for the GitHub org avatar, uploaded by hand in the org settings).
+A light-theme variant (`THEMES.light` in `logo.js`) is written as `OpenPyStruct_Logo_Light.svg` and
+`OpenPyStruct_Avatar_Light.png`; the README header switches between the two with `prefers-color-scheme`.
+`manifest.yml` names the Yak icon (`icon: OpenPyStruct.png`) and `yak-release.yml` copies it into the package.
+
 ## Licensing
 
 The engine and exporter are Eddy3D's code under GPL-3.0-or-later, as is the plugin that embeds the

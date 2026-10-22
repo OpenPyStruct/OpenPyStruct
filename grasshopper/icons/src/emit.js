@@ -11,12 +11,16 @@
  *     ../png24/<Name>.png                 the same rasterised at 24x24, transparent
  *     ../OpenPyStruct_Icons_Vector.svg    sprite sheet (one <symbol id="ops-Name">)
  *     ../manifest.csv                     name, ribbon tab, family, accent
+ *     ../package/OpenPyStruct_Logo.svg    the logo (logo.js), plus OpenPyStruct.png (128px, the Yak icon)
+ *                                         and OpenPyStruct_Avatar.png (512px, GitHub org); full run or --package
+ *     ../package/OpenPyStruct_Logo_Light.svg, OpenPyStruct_Avatar_Light.png   the light-theme variant
  *
  * Adding a glyph is: write the def() in ops-vec-set.js, then
  *
  *     node emit.js Beam_Model         # one or more names
  *     node emit.js                    # the whole set
  *     node emit.js --svg-only Foo     # skip rasterisation
+ *     node emit.js --package          # only the logo SVG and its PNGs
  *     node emit.js --prune            # also drop artefacts with no def()
  *     node emit.js --no-prune         # never drop anything
  *
@@ -48,7 +52,7 @@ const SPRITE = path.join(ROOT, 'OpenPyStruct_Icons_Vector.svg');
 const MANIFEST = path.join(ROOT, 'manifest.csv');
 
 const argv = process.argv.slice(2);
-const FLAGS = new Set(['--svg-only', '--prune', '--no-prune']);
+const FLAGS = new Set(['--svg-only', '--prune', '--no-prune', '--package']);
 const badFlags = argv.filter(a => a.startsWith('--') && !FLAGS.has(a));
 if (badFlags.length) {
   console.error('emit: unknown flag ' + badFlags.join(', ') +
@@ -59,6 +63,9 @@ const svgOnly = argv.includes('--svg-only');
 const pruneFlag = argv.includes('--prune');
 const noPrune = argv.includes('--no-prune');
 const names = argv.filter(a => !a.startsWith('--'));
+const packageOnly = argv.includes('--package') && names.length === 0;
+const PKG_DIR = path.join(ROOT, 'package');
+const PKG_PX = 128;
 
 /* The engine is browser-shaped (attaches to window/globalThis), so load it the
    way a page would rather than reshaping it into a module. */
@@ -75,6 +82,47 @@ if (!V || !SET) {
   process.exit(1);
 }
 
+/* The logo is brand art (logo.js, a 128-unit drawing), not a component glyph: its SVG is written as
+   is and rasterised 4x supersampled then box-filtered to each size. Never resize png24/ glyphs. */
+function packageLogo() {
+  const chromeBin = findChrome(), py = findPython();
+  if (!chromeBin || !py) {
+    console.error('emit: the logo PNGs need Chromium (OPENPYSTRUCT_CHROME) and python3 + Pillow (OPENPYSTRUCT_PYTHON).');
+    process.exit(1);
+  }
+  fs.mkdirSync(PKG_DIR, { recursive: true });
+  const L = require('./logo.js');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ops-pkg-'));
+  /* theme, svg name, [png name, px]...: dark is the default and the Yak icon; light is for light pages. */
+  const OUT = [['dark', 'OpenPyStruct_Logo.svg', [['OpenPyStruct.png', 128], ['OpenPyStruct_Avatar.png', 512]]],
+               ['light', 'OpenPyStruct_Logo_Light.svg', [['OpenPyStruct_Avatar_Light.png', 512]]]];
+  for (const [theme, svgName, pngs] of OUT) {
+    const logo = L.svg(theme);
+    fs.writeFileSync(path.join(PKG_DIR, svgName), logo);
+    console.log('emit: wrote package/' + svgName);
+    for (const [file, px] of pngs) {
+      const big = px * 4;
+      const html = '<!doctype html><html><head><style>*{margin:0;padding:0}svg{width:' + big + 'px;height:' + big +
+        'px;display:block}</style></head><body>' + logo + '</body></html>';
+      fs.writeFileSync(path.join(tmpDir, 'p.html'), html);
+      const shot = path.join(tmpDir, 'p.png');
+      execFileSync(chromeBin, ['--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
+        '--default-background-color=00000000', '--screenshot=' + shot,
+        '--window-size=' + (big + 40) + ',' + (big + 200), 'file://' + path.join(tmpDir, 'p.html')], { stdio: 'ignore' });
+      execFileSync(py, ['-c', [
+        'import sys', 'from PIL import Image',
+        'src, dst, big, px = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])',
+        'im = Image.open(src).convert("RGBA").crop((0, 0, big, big))',
+        'if max(im.getpixel((x, y))[3] for x in range(big) for y in range(0, big, 7)) < 40:',
+        '    raise SystemExit("rendered blank: " + src)',
+        'im.resize((px, px), Image.LANCZOS).save(dst)',
+      ].join('\n'), shot, path.join(PKG_DIR, file), String(big), String(px)], { stdio: 'inherit' });
+      console.log('emit: wrote package/' + file + ' (' + px + 'x' + px + ')');
+    }
+  }
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+}
+
 const targets = names.length ? names : SET.ORDER.slice();
 const unknown = targets.filter(n => !SET.ICONS[n]);
 if (unknown.length) {
@@ -82,6 +130,8 @@ if (unknown.length) {
     ' — add it to ops-vec-set.js first (see README, ADDING A COMPONENT).');
   process.exit(1);
 }
+
+if (packageOnly) { packageLogo(); process.exit(0); }
 
 fs.mkdirSync(SVG_DIR, { recursive: true });
 fs.mkdirSync(PNG_DIR, { recursive: true });
@@ -390,5 +440,6 @@ for (const name of targets) {
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });
+if (names.length === 0 && python) packageLogo();
 console.log('emit: rasterised ' + targets.length + ' PNG' + (targets.length === 1 ? '' : 's') +
   (python ? '' : ' (Chromium canvas — python3 + Pillow not available)'));
